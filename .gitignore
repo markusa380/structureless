@@ -1,0 +1,18 @@
+# Scala
+target/
+
+# Metals / Bloop
+.bloop/
+.metals/
+metals.sbt
+
+# IntelliJ
+.idea/
+
+# Eclipse
+.classpath
+.settings/
+.project
+
+# Visual Studio Code
+.vscode
