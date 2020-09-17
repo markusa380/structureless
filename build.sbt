@@ -12,6 +12,9 @@ lazy val root = (project in file("."))
       shapeless,
       cats,
       catsEffect,
-      mongoDriver
+      mongoDriver,
+      fs2Core,
+      fs2React,
+      scalaTest
     )
   )
