@@ -17,9 +17,14 @@ import fs2.Stream
 import fs2.interop.reactivestreams._
 import cats.effect.Effect
 import org.mongodb.scala.Observer
+import org.reactivestreams.Publisher
+import org.reactivestreams.Subscriber
+import cats.effect.ConcurrentEffect
+
+import structureless.util.StreamUtils._
 
 trait Query[D] { self =>
-  def compile(implicit fromBsonDocument: FromBsonDocument[D]): CompiledQuery[D]
+  def compile: CompiledQuery[D]
 
   /**
    * Constructs a composite `and` query from this query and another query
@@ -28,20 +33,28 @@ trait Query[D] { self =>
    * @return A composite `and` `Query` object
    */
   def and(that: Query[D]): Query[D] = new Query[D] {
-    def compile(implicit fromBsonDocument: FromBsonDocument[D]): CompiledQuery[D] = new CompiledQuery[D] {
-      val fromBsonDocument: FromBsonDocument[D] = fromBsonDocument
-      val bson = Filters.and(self.compile(fromBsonDocument).bson, that.compile(fromBsonDocument).bson)
+    def compile: CompiledQuery[D] = new CompiledQuery[D] {
+      val bson = Filters.and(self.compile.bson, that.compile.bson)
     }
   }
 }
 
 trait CompiledQuery[D] {
-  val fromBsonDocument: FromBsonDocument[D]
   val bson: Bson
 
-  def runOn[F[_]: Effect](col: MongoCollection[BsonDocument]): Stream[F, D] = for {
-    x <- ???
-  } yield x
+  def runOn[F[_]: ConcurrentEffect](
+    col: MongoCollection[BsonDocument]
+  )(implicit
+    fromBsonDoc: FromBsonDocument[D]
+  ): Stream[F, D] = {
+    col
+      .find(bson)
+      .toStream[F]
+      .flatMap(doc =>
+        Stream
+          .fromEither(fromBsonDoc(doc))
+      )
+  }
 
 }
 
