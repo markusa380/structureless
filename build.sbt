@@ -15,6 +15,10 @@ lazy val root = (project in file("."))
       mongoDriver,
       fs2Core,
       fs2React,
-      scalaTest
-    )
+      scalaTest,
+      testcontainers,
+      testcontainersScalaTest,
+      testcontainersMongoDb
+    ),
+    Test / fork := true
   )

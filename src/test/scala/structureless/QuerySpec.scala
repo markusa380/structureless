@@ -11,24 +11,11 @@ import org.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.bson.types.ObjectId
 
-object QuerySpec {
-  trait Wiring {
-    type TestRecordA = Record.`"userId" -> String, "username" -> String`.T
-
-    val testRecordAIdUpdater = Updater[TestRecordA, Id]
-    type IdTestRecord = testRecordAIdUpdater.Out
-
-    type TestRecordB = Record.`"userId" -> String, "age" -> Int`.T
-
-    val testObjectId = new ObjectId().toHexString()
-  }
-}
-
 class QuerySpec extends AnyFlatSpec with should.Matchers {
 
   behavior.of("A QueryBuilder")
 
-  it should "create a valid equals query on a String field" in new QuerySpec.Wiring {
+  it should "create a valid equals query on a String field" in new Wiring {
     val expectedResult = Filters.eq(
       fieldName = "username",
       value = "bob"
@@ -42,7 +29,7 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
   }
 
   // TODO - Seems like you cannot compare two ObjectId fields
-  ignore should "create a valid equals query on Id field" in new QuerySpec.Wiring {
+  ignore should "create a valid equals query on Id field" in new Wiring {
     val expectedResult = Filters.eq(
       fieldName = "_id",
       value = testObjectId
@@ -55,7 +42,7 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
       .shouldEqual(expectedResult)
   }
 
-  it should "create a valid search query on a String field" in new QuerySpec.Wiring {
+  it should "create a valid search query on a String field" in new Wiring {
 
     val expectedResult = Filters.regex(
       fieldName = "username",
@@ -68,5 +55,16 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
       .compile
       .bson
       .shouldEqual(expectedResult)
+  }
+
+  trait Wiring {
+    type TestRecordA = Record.`"userId" -> String, "username" -> String`.T
+
+    val testRecordAIdUpdater = Updater[TestRecordA, Id]
+    type IdTestRecord = testRecordAIdUpdater.Out
+
+    type TestRecordB = Record.`"userId" -> String, "age" -> Int`.T
+
+    val testObjectId = new ObjectId().toHexString()
   }
 }

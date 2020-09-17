@@ -96,7 +96,6 @@ object Query {
     def equals[K <: String: ValueOf: IsStringField](value: String) = new Query[D] {
       def compile: CompiledQuery[D] = new CompiledQuery[D] {
         val key = valueOf[K]
-
         val bson: Bson = Filters.eq(key, value)
       }
     }
