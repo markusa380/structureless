@@ -58,33 +58,6 @@ trait CompiledQuery[D] {
 
 }
 
-object Query {}
-
-/*
-trait Query[D] { self =>
-
-  /**
- * Build the query
- *
- * @return
- */
-  def build: Bson
-
-  /**
- * Constructs a composite `and` query from this query and another query
- *
- * @param that The other query object
- * @return A composite `and` `Query` object
- */
-  def and(that: Query[D]): Query[D] = new Query[D] {
-    def build: Bson = {
-      val thisBuilt = self.build
-      val thatBuilt = that.build
-      Filters.and(thisBuilt, thatBuilt)
-    }
-  }
-}
-
 object Query {
 
   def apply[D <: HList] = new QueryBuilder[D]
@@ -92,27 +65,27 @@ object Query {
   class QueryBuilder[D <: HList] {
 
     /**
- * For safety we need some kind of evidence that a field in question
- * is actually a field in the given record D, with value of type String.
- */
+     * For safety we need some kind of evidence that a field in question
+     * is actually a field in the given record D, with value of type String.
+     */
     type IsStringField[K] = Selector.Aux[D, K, String]
 
     /**
- * Constructs a search query.
- *
- * @param value The value that should be searched for
- * @return A `Query` object that builds the search query
- */
+     * Constructs a search query.
+     *
+     * @param value The value that should be searched for
+     * @return A `Query` object that builds the search query
+     */
     def search[K <: String: ValueOf: IsStringField](value: String) = new Query[D] {
 
       val values = value.toLowerCase.split("\\s+")
 
       def findAnywhere(regex: String) = "(?=.*" + regex + ")"
 
-      def build: Bson = {
+      def compile: CompiledQuery[D] = new CompiledQuery[D] {
         val key = valueOf[K]
 
-        Filters.regex(
+        val bson: Bson = Filters.regex(
           key,
           "^" + values.map(Regex.quote).map(findAnywhere).mkString,
           options = "i"
@@ -121,18 +94,17 @@ object Query {
     }
 
     def equals[K <: String: ValueOf: IsStringField](value: String) = new Query[D] {
-      def build: Bson = {
+      def compile: CompiledQuery[D] = new CompiledQuery[D] {
         val key = valueOf[K]
 
-        Filters.eq(key, value)
+        val bson: Bson = Filters.eq(key, value)
       }
     }
 
     def idEquals(value: String) = new Query[D] {
-      def build: Bson = {
-        Filters.eq("_id", new ObjectId(value))
+      def compile: CompiledQuery[D] = new CompiledQuery[D] {
+        val bson: Bson = Filters.eq("_id", new ObjectId(value))
       }
     }
   }
 }
- */

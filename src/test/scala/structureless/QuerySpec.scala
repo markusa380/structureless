@@ -36,7 +36,8 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
 
     Query[TestRecordA]
       .equals["username"]("bob")
-      .build
+      .compile
+      .bson
       .shouldEqual(expectedResult)
   }
 
@@ -49,7 +50,8 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
 
     Query[TestRecordA]
       .idEquals(testObjectId)
-      .build
+      .compile
+      .bson
       .shouldEqual(expectedResult)
   }
 
@@ -63,7 +65,8 @@ class QuerySpec extends AnyFlatSpec with should.Matchers {
 
     Query[TestRecordA]
       .search["username"]("bob")
-      .build
+      .compile
+      .bson
       .shouldEqual(expectedResult)
   }
 }
