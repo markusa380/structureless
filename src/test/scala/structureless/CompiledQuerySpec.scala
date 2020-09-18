@@ -2,6 +2,8 @@ package structureless
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.concurrent.TimeLimitedTests
+import org.scalatest.time.{Seconds, Span}
 import com.dimafeng.testcontainers.scalatest.TestContainersForAll
 import com.dimafeng.testcontainers.{Container, ForAllTestContainer, MongoDBContainer}
 import com.dimafeng.testcontainers.GenericContainer.DockerImage
@@ -26,7 +28,9 @@ import cats.effect._
 
 import scala.concurrent.ExecutionContext
 
-class CompiledQuerySpec extends AnyFlatSpec with Matchers with ForAllTestContainer {
+class CompiledQuerySpec extends AnyFlatSpec with Matchers with ForAllTestContainer with TimeLimitedTests {
+
+  val timeLimit = Span(60, Seconds)
 
   val mongoDb = MongoDBContainer("mongo:4.0.10")
 
@@ -34,7 +38,7 @@ class CompiledQuerySpec extends AnyFlatSpec with Matchers with ForAllTestContain
 
   "The test suite" should "start a container successfully" in {
     val replicaSetUrl = mongoDb.replicaSetUrl
-    println(replicaSetUrl)
+    println("The URL of the test MongoDB is: " + replicaSetUrl)
     replicaSetUrl shouldNot be(empty)
   }
 
@@ -58,7 +62,11 @@ class CompiledQuerySpec extends AnyFlatSpec with Matchers with ForAllTestContain
 
     testRecords.foreach(doc => insertTestDocument(doc))
 
-    val resultList: List[TestRecord] = query.compile.runOn[IO](colletion).compile.toList.unsafeRunSync()
+    val resultList: List[TestRecord] = query.compile
+      .runOn[IO](colletion)
+      .compile
+      .toList
+      .unsafeRunSync()
 
     resultList shouldEqual expectedRecords
   }
