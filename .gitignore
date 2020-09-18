@@ -5,6 +5,7 @@ target/
 .bloop/
 .metals/
 metals.sbt
+null/
 
 # IntelliJ
 .idea/
