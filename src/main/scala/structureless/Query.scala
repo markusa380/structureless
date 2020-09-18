@@ -1,36 +1,33 @@
 package structureless
 
+import structureless.util.StreamUtils._
 import structureless.FromBsonDocument
 
 import shapeless.HList
 import shapeless.ops.record._
 
-import org.bson.conversions.Bson
-import org.mongodb.scala.model.Filters
-
-import scala.util.matching.Regex
-import org.bson.types.ObjectId
-import org.mongodb.scala.MongoCollection
 import org.bson.BsonDocument
+import org.bson.types.ObjectId
+import org.bson.conversions.Bson
+
+import org.mongodb.scala.{MongoCollection, Observer}
+import org.mongodb.scala.model.Filters
 
 import fs2.Stream
 import fs2.interop.reactivestreams._
-import cats.effect.Effect
-import org.mongodb.scala.Observer
+
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
+
 import cats.effect.ConcurrentEffect
 
-import structureless.util.StreamUtils._
+import scala.util.matching.Regex
 
 trait Query[D] { self =>
   def compile: CompiledQuery[D]
 
   /**
-   * Constructs a composite `and` query from this query and another query
-   *
-   * @param that The other query object
-   * @return A composite `and` `Query` object
+   * Constructs a composite query
    */
   def and(that: Query[D]): Query[D] = new Query[D] {
     def compile: CompiledQuery[D] = new CompiledQuery[D] {
@@ -40,8 +37,13 @@ trait Query[D] { self =>
 }
 
 trait CompiledQuery[D] {
+
   val bson: Bson
 
+  /**
+   * Run the query against a MongoDB collection, returning a stream of
+   * parsed elements that fails when it encounters an element that cannot be parsed.
+   */
   def runOn[F[_]: ConcurrentEffect](
     col: MongoCollection[BsonDocument]
   )(implicit

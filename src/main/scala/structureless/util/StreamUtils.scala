@@ -1,20 +1,23 @@
 package structureless.util
 
 import org.mongodb.scala.{Observable => MObservable, Subscription => MSubscription, Observer => MObserver}
-import cats.effect.ConcurrentEffect
+
+import org.reactivestreams._
 
 import fs2.Stream
 import fs2.interop.reactivestreams._
 
-import org.reactivestreams._
-import org.mongodb.scala.Observer
+import cats.effect.ConcurrentEffect
 
 object StreamUtils {
 
   implicit class StreamFromMongoObservable[D](mObservable: MObservable[D]) {
+
+    /**
+     * Convert an `org.mongodb.scala.Observable` to a lazy `fs2.Stream`.
+     */
     def toStream[F[_]: ConcurrentEffect]: Stream[F, D] =
       new Publisher[D] {
-
         override def subscribe(subscriber: Subscriber[_ >: D]): Unit = mObservable.subscribe {
           new MObserver[D] {
             override def onSubscribe(mSubscription: MSubscription): Unit = {
